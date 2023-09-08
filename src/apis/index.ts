@@ -9,7 +9,7 @@ import ResponseDto from 'src/interfaces/response/response.dto';
 import { GetPopularListResponseDto, GetRelationListResponseDto } from 'src/interfaces/response/search';
 import { GetLoginUserResponseDto, GetUserResponseDto, PatchNicknameResponseDto, PatchProfileImageResponseDto } from 'src/interfaces/response/user';
 
-const API_DOMAIN = 'http://54.180.137.80:4040/api/v1';
+const API_DOMAIN = 'http://localhost:4040/api/v1';
 const SIGN_UP_URL = () => `${API_DOMAIN}/auth/sign-up`;  
 const SIGN_IN_URL = () => `${API_DOMAIN}/auth/sign-in`;
 
@@ -39,9 +39,8 @@ const PATCH_USER_NICKNAME_URL = () => `${API_DOMAIN}/user/nickname`;
 const PATCH_USER_PROFILE_URL = () => `${API_DOMAIN}/user/profile`;
 
 const GET_SIGN_IN_USER_URL = () => `${API_DOMAIN}/user`;
-const UPLOAD_FILE = () => `http://54.180.137.80:4040/file/upload`;
+const UPLOAD_FILE = () => `http://localhost:4040/file/upload`;
 
-//! response.data -> �뜝�럥堉꾢뜝�럩�젷�슖�댙�삕 �뛾�룇猷놅옙裕� response body�뜝�럥�뱺 �뜝�룞�삕�뜝�룞�삕�뇡占� �뜝�럡����뜝�럩�뮔 //
 export const signUpRequest = async (data: SignUpRequestDto) => {
     const result = 
       await axios.post(SIGN_UP_URL(), data)

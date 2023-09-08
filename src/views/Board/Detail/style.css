@@ -176,6 +176,11 @@
     align-items: center;
 }
 
+.board-detail-bottom-icon { 
+    width: 24px;
+    height: 24px;
+}
+
 .board-detail-bottom-button {
     border-radius: 24px;
 
