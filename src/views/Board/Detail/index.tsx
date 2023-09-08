@@ -171,8 +171,28 @@ export default function BoardDetail() {
                     </div>
                 </div>
             </div>
-            <div className='board-detail-favorite-container'></div>
-            <div className='board-detail-comments-container'></div>
+            <div className='board-favorite-container'>
+                <div className='board-favorite-box'>
+                    <div className='board-favorite-title'>{'좋아요 '}<span className='emphasis'>{23}</span></div>
+                    <div className='board-favorite-list'></div>
+                </div>
+            </div>
+            <div className='board-comments-container'>
+                <div className='board-comments-box'>
+                    <div className='board-comments-title'>{'댓글 '}<span className='emphasis'>{486}</span></div>
+                    <div className='board-comments-list'></div>
+                </div>
+                <div className='divider'></div>
+                <div className='board-comments-pagination-box'></div>
+                <div className='board-comments-input-box'>
+                    <div className='board-comments-input-container'>
+                        <textarea className='board-comments-input' placeholder='댓글을 작성해주세요.' />
+                        <div className='board-comments-button-box'>
+                            <div className='black-button'>댓글달기</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     )
 }
@@ -180,8 +200,10 @@ export default function BoardDetail() {
     //              render              //
     return (
      <div id='board-detail-wrapper'>
-        <Board />
-        <BoardBottom />
+        <div className='board-container'>
+            <Board />
+            <BoardBottom />
+        </div>
      </div>
   )
 }
