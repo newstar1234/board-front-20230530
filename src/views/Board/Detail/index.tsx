@@ -203,6 +203,7 @@ export default function BoardDetail() {
         if(code === 'NU') alert('존재하지 않는 유저입니다.');
         if(code === 'NB') alert('존재하지 않는 게시물입니다.');
         if(code === 'VF') alert('잘못된 게시물 번호입니다.');
+        if(code === 'AF') alert('로그인이 필요합니다.');
         if(code === 'DE') alert('데이터 베이스 에러입니다.');
         if(code !== 'SU') return;
 
@@ -214,6 +215,7 @@ export default function BoardDetail() {
         
         const { code } = responseBody; 
         if(code === 'VF') alert('잘못된 게시물 번호입니다.');
+        if(code === 'AF') alert('로그인이 필요합니다.');
         if(code === 'DE') alert('데이터 베이스 에러입니다.');
         if(code !== 'SU') {
             setCommentList([]);

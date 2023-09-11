@@ -73,6 +73,7 @@ export default function UserPage() {
       if( code === 'NU') alert('존재하지 않는 유저입니다.');
       if( code === 'EN') alert('중복되는 닉네임입니다.');
       if( code === 'VF') alert('잘못된 입력입니다.');
+      if( code === 'AF') alert('로그인이 필요합니다.');
       if( code === 'DE') alert('데이터 베이스 에러입니다.');
       if( code !== 'SU') {
         setNickname(user.nickname);
@@ -98,6 +99,7 @@ export default function UserPage() {
       if(!user) return;
       if( code === 'NU') alert('존재하지 않는 유저입니다.');
       if( code === 'VF') alert('잘못된 입력입니다.');
+      if( code === 'AF') alert('로그인이 필요합니다.');
       if( code === 'DE') alert('데이터 베이스 에러입니다.');
       if( code !== 'SU') {
         setProfileImageUrl(user?.profileImageUrl as string);

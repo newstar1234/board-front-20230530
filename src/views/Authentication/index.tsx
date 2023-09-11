@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, KeyboardEvent } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useCookies } from 'react-cookie';
 import { Address, useDaumPostcodePopup } from 'react-daum-postcode';
@@ -7,7 +7,6 @@ import { SignUpRequestDto } from 'src/interfaces/request/auth';
 import SignInRequestDto from 'src/interfaces/request/auth/sign-in.request.dto';
 import { useUserStore } from 'src/stores';
 import InputBox from 'src/components/InputBox';
-import { signInMock } from 'src/mocks';
 import { INPUT_ICON, MAIN_PATH, emailPattern, telNumberPattern } from 'src/constants';
 import { signInRequest, signUpRequest } from 'src/apis';
 import { SignInResponseDto } from 'src/interfaces/response/auth';
@@ -71,6 +70,11 @@ export default function Authentication() {
 
 
   //              event handler             //
+  // description : 비밀번호 인풋 key down 이벤트 //
+  const onPasswordKeyDownHandler = (event:KeyboardEvent<HTMLInputElement>) => {
+    if(event.key !== 'Enter') return;
+    onSignInButtonClickHandler();
+  }
   // description : 비밀번호 타입 변경 버튼 클릭 이벤트 //
   const onPasswordIconClicHandler = () => {
     setShowPassword(!showPassword);
@@ -104,7 +108,7 @@ export default function Authentication() {
           </div>
           <div className='auth-card-top-input-container'>
             <InputBox label='이메일주소' type='text' placeholder='이메일 주소를 입력해주세요.' error={ error } value={ email } setValue={ setEmail }/>
-            <InputBox label='비밀번호' type={showPassword ? 'text' : 'password'} placeholder='비밀번호를 입력해주세요' icon={ showPassword ? INPUT_ICON.ON : INPUT_ICON.OFF } buttonHandler = { onPasswordIconClicHandler } error={ error } value={password} setValue={setPassword} />
+            <InputBox label='비밀번호' type={showPassword ? 'text' : 'password'} placeholder='비밀번호를 입력해주세요' icon={ showPassword ? INPUT_ICON.ON : INPUT_ICON.OFF } buttonHandler = { onPasswordIconClicHandler } error={ error } value={password} setValue={setPassword} keyDownHandler={onPasswordKeyDownHandler} />
           </div>
         </div>
         <div className='auth-card-bottom'>

@@ -52,6 +52,7 @@ export default function Header() {
   const postBoardResponseHandler = (code: string) => {
     if(code === 'NE') alert('존재하지 않는 회원입니다.');
     if(code === 'VF') alert('필수 데이터를 입력하지 않았습니다.');
+    if(code === 'AF') alert('로그인이 필요합니다.');
     if(code === 'DE') alert('데이터 베이스 에러입니다.'); 
     if(code !== 'SU') return;
 
@@ -67,6 +68,7 @@ export default function Header() {
     if (code === 'NB') alert('존재하지 않는 게시물입니다.');
     if (code === 'NP') alert('권한이 없습니다.');
     if (code === 'VF') alert('필수 데이터를 입력하지 않았습니다.');
+    if (code === 'AF') alert('로그인이 필요합니다.');
     if (code === 'DE') alert('데이터베이스 에러입니다.');
     if (code !== 'SU') return;
 
