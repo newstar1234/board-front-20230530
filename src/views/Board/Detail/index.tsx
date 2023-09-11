@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom';
-import { deleteBoardRequest, getBoardRequest } from 'src/apis';
+import { deleteBoardRequest, getBoardRequest, getFavoriteListRequest, putFavoriteRequest } from 'src/apis';
 import { BOARD_UPDATE_PATH, MAIN_PATH } from 'src/constants';
 import { GetBoardResponseDto } from 'src/interfaces/response/board';
 import ResponseDto from 'src/interfaces/response/response.dto';
@@ -10,6 +10,7 @@ import defaultProfileImage from 'src/assets/default-profile-icon.png';
 import './style.css';
 import { useUserStore } from 'src/stores';
 import { useCookies } from 'react-cookie';
+import GetFavoriteListResponseDto, { FavoriteListResponseDto } from 'src/interfaces/response/board/get-favorite-list.response.dto';
 
 
 
@@ -148,6 +149,71 @@ export default function BoardDetail() {
     // description : 게시물 하단 컴포넌트 //
     const BoardBottom = () => {
 
+    //              state              //
+    // description : 좋아요 랜더링 여부 상태 //
+    const [showFavorite, setShowFavorite] = useState<boolean>(false);
+    // description : 댓글 랜더링 여부 상태 //
+    const [showComment, setShowComment] = useState<boolean>(false);
+    // description : 좋아요 리스트 상태 //
+    const [favoriteList, setFavoriteList] = useState<FavoriteListResponseDto[]>([]);
+    // description : 좋아요 갯수 상태 //
+    const [favoriteCount, setFavoriteCount] = useState<number>(0);
+    // description : 사용자 좋아요 상태 //
+    const [isFavorite, setFavorite] = useState<boolean>(false);
+ 
+    //              function              //
+    // description : 좋아요 리스트 불러오기 응답 처리 함수 //
+    const getFavoriteListResponseHandler = (responseBody: GetFavoriteListResponseDto | ResponseDto) => {
+
+        const { code } = responseBody;
+        if(code === 'VF') alert('게시물 번호가 잘못되었습니다.');
+        if(code === 'DE') alert('데이터 베이스 에러입니다.');
+        if(code !== 'SU') {
+            setFavoriteList([]);
+            setFavoriteCount(0);
+            return;
+        }   
+
+        const { favoriteList } = responseBody as GetFavoriteListResponseDto;
+        setFavoriteList(favoriteList);
+        setFavoriteCount(favoriteList.length);
+    }
+    // description : 좋아요 응답 처리 함수 //
+    const putFavoriteResponseHandler = (code: string) => {
+        
+    }
+
+    //              event handler              //
+    // description : 좋아요 랜더링 버튼 클릭 이벤트 처리 함수 //
+    const onShowFavoriteButtonClickHandler = () => {
+        setShowFavorite(!showFavorite);
+    };
+    // description : 댓글 랜더링 버튼 클릭 이벤트 처리 함수 //
+    const onShowCommentButtonClickHandler = () => {
+        setShowComment(!showComment);
+    };
+    // description : 좋아요 클릭 이벤트 처리 함수 //
+    const onFavoriteClickHandler = () => {
+        if(!boardNumber) return;
+        const token = cookies.accessToken;
+        if(!token) {
+            alert('로그인이 필요합니다');
+            return;
+        }
+        putFavoriteRequest(boardNumber, token).then(putFavoriteResponseHandler);
+    }
+
+    //              effect              //
+    // description : 조회하는 boardNumber가 변경될 때마다 실행될 함수 //
+    useEffect(() => {
+        if(!boardNumber) {
+            alert('잘못된 접근입니다.');
+            navigator(MAIN_PATH);
+            return;
+        }
+        getFavoriteListRequest(boardNumber).then(getFavoriteListResponseHandler);
+    }, [boardNumber]);
+
     //              render              //
     return (
         <div className='board-bottom'>
@@ -156,9 +222,13 @@ export default function BoardDetail() {
                     <div className='board-detail-bottom-button'>
                         <div className='favorite-icon'></div>
                     </div>
-                    <div className='board-detail-bottom-text'>{`좋아요 23`}</div>
-                    <div className='board-detail-bottom-button'>
-                        <div className='down-icon'></div>
+                    <div className='board-detail-bottom-text'>{`좋아요 ${favoriteCount}`}</div>
+                    <div className='board-detail-bottom-button' onClick={onShowFavoriteButtonClickHandler}>
+                        {showFavorite ? (
+                            <div className='up-icon'></div>
+                        ) : (
+                            <div className='down-icon'></div>
+                        )}
                     </div>
                 </div>
                 <div className='board-bottom-button-group'>
@@ -166,17 +236,31 @@ export default function BoardDetail() {
                         <div className='comment-icon'></div>
                     </div>
                     <div className='board-detail-bottom-text'>{`댓글 486`}</div>
-                    <div className='board-detail-bottom-button'>
-                        <div className='down-icon'></div>
+                    <div className='board-detail-bottom-button' onClick={onShowCommentButtonClickHandler} >
+                        {showComment ? (
+                            <div className='up-icon'></div>
+                        ) : (
+                            <div className='down-icon'></div>
+                        )}
                     </div>
                 </div>
             </div>
+            {showFavorite && (
             <div className='board-favorite-container'>
                 <div className='board-favorite-box'>
-                    <div className='board-favorite-title'>{'좋아요 '}<span className='emphasis'>{23}</span></div>
-                    <div className='board-favorite-list'></div>
+                    <div className='board-favorite-title'>{'좋아요 '}<span className='emphasis'>{favoriteCount}</span></div>
+                    <div className='board-favorite-list'>
+                        {favoriteList.map(({profileImageUrl, nickname}) => (
+                            <div className='board-favorite-item'>
+                                <div className='board-favorite-profile' style={{backgroundImage: `url(${profileImageUrl ? profileImageUrl : defaultProfileImage})`}}></div>
+                                <div className='board-favorite-nickname'>{nickname}</div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
+            )}
+            {showComment && (
             <div className='board-comments-container'>
                 <div className='board-comments-box'>
                     <div className='board-comments-title'>{'댓글 '}<span className='emphasis'>{486}</span></div>
@@ -192,7 +276,8 @@ export default function BoardDetail() {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> 
+            )}
         </div>
     )
 }
