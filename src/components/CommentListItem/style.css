@@ -1,6 +1,5 @@
 .comment-list-item-box {
     display: block;  /*! margin이 씹히면 block이 문제니까 확인해보면 됨*/
-    margin: 15px 0;
 }
 
 .comment-list-item-writer {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom';
-import { deleteBoardRequest, getBoardRequest, getFavoriteListRequest, putFavoriteRequest } from 'src/apis';
-import { BOARD_UPDATE_PATH, MAIN_PATH } from 'src/constants';
+import { deleteBoardRequest, getBoardRequest, getCommentListRequest, getFavoriteListRequest, putFavoriteRequest } from 'src/apis';
+import { BOARD_UPDATE_PATH, COUNT_BY_PAGE_COMMENT, MAIN_PATH } from 'src/constants';
 import { GetBoardResponseDto } from 'src/interfaces/response/board';
 import ResponseDto from 'src/interfaces/response/response.dto';
 import { dateFormat } from 'src/utils';
@@ -11,6 +11,10 @@ import './style.css';
 import { useUserStore } from 'src/stores';
 import { useCookies } from 'react-cookie';
 import GetFavoriteListResponseDto, { FavoriteListResponseDto } from 'src/interfaces/response/board/get-favorite-list.response.dto';
+import GetCommentListResponseDto, { CommentListResponseDto } from 'src/interfaces/response/board/get-comment-list.response.dto';
+import { usePagination } from 'src/hooks';
+import CommentListItem from 'src/components/CommentListItem';
+import Pagination from 'src/components/Pagination';
 
 
 
@@ -156,11 +160,19 @@ export default function BoardDetail() {
     const [showComment, setShowComment] = useState<boolean>(false);
     // description : 좋아요 리스트 상태 //
     const [favoriteList, setFavoriteList] = useState<FavoriteListResponseDto[]>([]);
-    // description : 좋아요 갯수 상태 //
+    // description : 좋아요 개수 상태 //
     const [favoriteCount, setFavoriteCount] = useState<number>(0);
     // description : 사용자 좋아요 상태 //
     const [isFavorite, setFavorite] = useState<boolean>(false);
- 
+    // description : 댓글 리스트 상태 //
+    const [commentList, setCommentList] = useState<CommentListResponseDto[]>([]);
+    // description : 댓글 개수 상태 //
+    const [commentCount, setCommentCount] = useState<number>(0);
+    // description : 현재 페이지에서 보여줄 댓글 리스트 상태 //
+    const [viewCommentList, setViewCommentList] = useState<CommentListResponseDto[]>([]);
+    // description : 페이지네이션 관련 상태 //
+    const { totalPage, currentPage, currentSection, onNextClickHandler, onPreviousClickHandler, onPageClickHandler, changeSection } = usePagination();
+
     //              function              //
     // description : 좋아요 리스트 불러오기 응답 처리 함수 //
     const getFavoriteListResponseHandler = (responseBody: GetFavoriteListResponseDto | ResponseDto) => {
@@ -180,7 +192,42 @@ export default function BoardDetail() {
     }
     // description : 좋아요 응답 처리 함수 //
     const putFavoriteResponseHandler = (code: string) => {
+        if(code === 'NU') alert('존재하지 않는 유저입니다.');
+        if(code === 'NB') alert('존재하지 않는 게시물입니다.');
+        if(code === 'VF') alert('잘못된 게시물 번호입니다.');
+        if(code === 'DE') alert('데이터 베이스 에러입니다.');
+        if(code !== 'SU') return;
+
+        if(!boardNumber) return;
+        getFavoriteListRequest(boardNumber).then(getFavoriteListResponseHandler);
+    }
+    // description : 댓글 리스트 불러오기 응답 처리 함수 //
+    const getCommentListResponseHandler = (responseBody: GetCommentListResponseDto | ResponseDto) => {
         
+        const { code } = responseBody; 
+        if(code === 'VF') alert('잘못된 게시물 번호입니다.');
+        if(code === 'DE') alert('데이터 베이스 에러입니다.');
+        if(code !== 'SU') {
+            setCommentList([]);
+            return;
+        }
+
+        const { commentList } = responseBody as GetCommentListResponseDto;
+        setCommentList(commentList);
+        setCommentCount(commentList.length);
+
+        changeSection(commentList.length, COUNT_BY_PAGE_COMMENT);
+        getViewCommentList(commentList);
+    }
+
+    // description : 현재 페이지의 댓글 리스트 분류 함수 //
+    const getViewCommentList = (commentList: CommentListResponseDto[]) => {
+        const lastIndex = commentList.length > COUNT_BY_PAGE_COMMENT * currentPage ? 
+                        COUNT_BY_PAGE_COMMENT * currentPage : 
+                        commentList.length;
+        const startIndex = COUNT_BY_PAGE_COMMENT * (currentPage - 1);
+        const viewCommentList = commentList.slice(startIndex, lastIndex);
+        setViewCommentList(viewCommentList);
     }
 
     //              event handler              //
@@ -212,15 +259,30 @@ export default function BoardDetail() {
             return;
         }
         getFavoriteListRequest(boardNumber).then(getFavoriteListResponseHandler);
+        getCommentListRequest(boardNumber).then(getCommentListResponseHandler);
     }, [boardNumber]);
+    // description : favorite list가 변경될 때마다 실행될 함수 //
+    useEffect(() => {
+        setFavorite(false);
+        if(!user) return;
+        favoriteList.forEach(item => {if(item.email === user.email) setFavorite(true)})
+    }, [favoriteList]);
+    // description : current page가 변결될 때마다 실행될 함수 //
+    useEffect(() => {
+        getViewCommentList(commentList);
+    }, [currentPage]);
 
     //              render              //
     return (
         <div className='board-bottom'>
             <div className='board-bottom-button-container'>
                 <div className='board-bottom-button-group'>
-                    <div className='board-detail-bottom-button'>
-                        <div className='favorite-icon'></div>
+                    <div className='board-detail-bottom-button' onClick={onFavoriteClickHandler} >
+                        {isFavorite ? (
+                            <div className='favorite-fill-icon'></div>
+                        ) : (
+                            <div className='favorite-icon'></div>
+                        )}
                     </div>
                     <div className='board-detail-bottom-text'>{`좋아요 ${favoriteCount}`}</div>
                     <div className='board-detail-bottom-button' onClick={onShowFavoriteButtonClickHandler}>
@@ -235,7 +297,7 @@ export default function BoardDetail() {
                     <div className='board-detail-bottom-icon'>
                         <div className='comment-icon'></div>
                     </div>
-                    <div className='board-detail-bottom-text'>{`댓글 486`}</div>
+                    <div className='board-detail-bottom-text'>{`댓글 ${commentCount}`}</div>
                     <div className='board-detail-bottom-button' onClick={onShowCommentButtonClickHandler} >
                         {showComment ? (
                             <div className='up-icon'></div>
@@ -263,11 +325,23 @@ export default function BoardDetail() {
             {showComment && (
             <div className='board-comments-container'>
                 <div className='board-comments-box'>
-                    <div className='board-comments-title'>{'댓글 '}<span className='emphasis'>{486}</span></div>
-                    <div className='board-comments-list'></div>
+                    <div className='board-comments-title'>{'댓글 '}<span className='emphasis'>{commentCount}</span></div>
+                    <div className='board-comments-list'>
+                        {viewCommentList.map(commentItem => <CommentListItem item={commentItem}/>)}
+                    </div>
                 </div>
                 <div className='divider'></div>
-                <div className='board-comments-pagination-box'></div>
+                <div className='board-comments-pagination-box'>
+                    {commentCount !== 0 && (
+                        <Pagination 
+                            totalPage={totalPage}
+                            currentPage={currentPage}
+                            onPageClickHandler={onPageClickHandler}
+                            onNextClickHandler={onNextClickHandler}
+                            onPreviousClickHandler={onPreviousClickHandler}
+                        />
+                    )}
+                </div>
                 <div className='board-comments-input-box'>
                     <div className='board-comments-input-container'>
                         <textarea className='board-comments-input' placeholder='댓글을 작성해주세요.' />
