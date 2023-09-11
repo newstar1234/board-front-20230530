@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { ChangeEvent, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom';
-import { deleteBoardRequest, getBoardRequest, getCommentListRequest, getFavoriteListRequest, putFavoriteRequest } from 'src/apis';
+import { deleteBoardRequest, getBoardRequest, getCommentListRequest, getFavoriteListRequest, postCommentRequest, putFavoriteRequest } from 'src/apis';
 import { BOARD_UPDATE_PATH, COUNT_BY_PAGE_COMMENT, MAIN_PATH } from 'src/constants';
 import { GetBoardResponseDto } from 'src/interfaces/response/board';
 import ResponseDto from 'src/interfaces/response/response.dto';
@@ -15,6 +15,7 @@ import GetCommentListResponseDto, { CommentListResponseDto } from 'src/interface
 import { usePagination } from 'src/hooks';
 import CommentListItem from 'src/components/CommentListItem';
 import Pagination from 'src/components/Pagination';
+import { PostCommentRequestDto } from 'src/interfaces/request/board';
 
 
 
@@ -96,7 +97,12 @@ export default function BoardDetail() {
 
     //              effect              //
     // description : 게시물 번호가 바뀔 때 마다 실행 //
+    let boardNumberFlag = true;  // 조회수 1번만 증가하도록 effect에서 한번은 true로 돌고, 한번은 false라서 안 돌게 만듬
     useEffect(() => {
+        if(boardNumberFlag) {
+            boardNumberFlag = false;
+            return;
+        }
         if(!boardNumber) {
             alert('게시물 번호가 잘못되었습니다.');
             navigator(MAIN_PATH);
@@ -170,6 +176,8 @@ export default function BoardDetail() {
     const [commentCount, setCommentCount] = useState<number>(0);
     // description : 현재 페이지에서 보여줄 댓글 리스트 상태 //
     const [viewCommentList, setViewCommentList] = useState<CommentListResponseDto[]>([]);
+    // description : 댓글 상태 //
+    const [comment, setComment] = useState<string>('');
     // description : 페이지네이션 관련 상태 //
     const { totalPage, currentPage, currentSection, onNextClickHandler, onPreviousClickHandler, onPageClickHandler, changeSection } = usePagination();
 
@@ -219,6 +227,19 @@ export default function BoardDetail() {
         changeSection(commentList.length, COUNT_BY_PAGE_COMMENT);
         getViewCommentList(commentList);
     }
+    // get 말고는 code로 받음/ get은 responsebody
+    // description : 댓글 작성 응답 처리 함수 //
+    const postCommentResponseHandler = (code: string) => {
+        if(code === 'NU') alert('존재하지 않는 유저입니다.');
+        if(code === 'NB') alert('존재하지 않는 게시물입니다.');
+        if(code === 'VF') alert('잘못된 입력입니다.');
+        if(code === 'DE') alert('데이터 베이스 에러입니다.');
+        if(code !== 'SU') return;
+
+        setComment('');   // 댓글 작성 업로드 후 내용 빈값으로 설정
+        if(!boardNumber) return;
+        getCommentListRequest(boardNumber).then(getCommentListResponseHandler);
+    }
 
     // description : 현재 페이지의 댓글 리스트 분류 함수 //
     const getViewCommentList = (commentList: CommentListResponseDto[]) => {
@@ -231,6 +252,12 @@ export default function BoardDetail() {
     }
 
     //              event handler              //
+    // description : 댓글 변경 이벤트 처리 함수 //
+    const onCommentChangeHandler = (event:ChangeEvent<HTMLTextAreaElement>) => {
+        const comment = event.target.value;
+        setComment(comment);
+    };
+
     // description : 좋아요 랜더링 버튼 클릭 이벤트 처리 함수 //
     const onShowFavoriteButtonClickHandler = () => {
         setShowFavorite(!showFavorite);
@@ -244,10 +271,27 @@ export default function BoardDetail() {
         if(!boardNumber) return;
         const token = cookies.accessToken;
         if(!token) {
-            alert('로그인이 필요합니다');
+            alert('로그인이 필요합니다.');
             return;
         }
         putFavoriteRequest(boardNumber, token).then(putFavoriteResponseHandler);
+    }
+    // description : 댓글달기 클릭 이벤트 처리 함수 //
+    const onPostCommentButtonClickHandler = () => {
+        if(!boardNumber) return;
+        const token = cookies.accessToken;
+        if(!token) {
+            alert('로그인이 필요합니다.');
+            return;
+        }
+        if(!comment) {
+            alert('내용을 입력해주세요.');
+            return;
+        }
+        const data: PostCommentRequestDto = {
+            content:comment
+        }
+        postCommentRequest(boardNumber, data, token).then(postCommentResponseHandler);
     }
 
     //              effect              //
@@ -267,10 +311,14 @@ export default function BoardDetail() {
         if(!user) return;
         favoriteList.forEach(item => {if(item.email === user.email) setFavorite(true)})
     }, [favoriteList]);
-    // description : current page가 변결될 때마다 실행될 함수 //
+    // description : current page가 변경될 때마다 실행될 함수 //
     useEffect(() => {
         getViewCommentList(commentList);
     }, [currentPage]);
+    // description : current section이 변경될 때마다 실행될 함수 //
+    useEffect(() => {
+        changeSection(commentCount, COUNT_BY_PAGE_COMMENT)
+    }, [currentSection]);
 
     //              render              //
     return (
@@ -344,9 +392,13 @@ export default function BoardDetail() {
                 </div>
                 <div className='board-comments-input-box'>
                     <div className='board-comments-input-container'>
-                        <textarea className='board-comments-input' placeholder='댓글을 작성해주세요.' />
+                        <textarea className='board-comments-input' placeholder='댓글을 작성해주세요.' value={comment} onChange={onCommentChangeHandler} />
                         <div className='board-comments-button-box'>
-                            <div className='black-button'>댓글달기</div>
+                            {comment.length === 0 ? (
+                                <div className='disable-button'>댓글달기</div>
+                            ) : (
+                                <div className='black-button' onClick={onPostCommentButtonClickHandler} >댓글달기</div>
+                            )}
                         </div>
                     </div>
                 </div>

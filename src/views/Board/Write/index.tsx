@@ -1,4 +1,4 @@
-import { ChangeEvent, useRef, useState } from 'react'
+import { ChangeEvent, useRef, useState, useEffect } from 'react'
 import { useBoardWriteStore } from 'src/stores';
 import './style.css';
 
@@ -13,7 +13,7 @@ export default function BoardWrite() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // description : 게시물 정보를 저장할 상태 //
-  const { boardTitle, boardContent, boardImage, setBoardTitle, setBoardContent, setBoardImage } = useBoardWriteStore();
+  const { boardTitle, boardContent, boardImage, setBoardTitle, setBoardContent, setBoardImage, resetBoard } = useBoardWriteStore();
 
   // description : 이미지를 저장할 상태 //
   const [baardImageUrl, setBoardImageUrl] =useState<string>('');
@@ -54,6 +54,10 @@ export default function BoardWrite() {
   //              component             //
   
   //              effect             //
+  // 수정버튼 클릭 후 수정 안하고 메인 -> 글쓰기 하면 내용이 남아있는거 리셋하는 작업 //
+  useEffect(() => {
+    resetBoard();
+  }, []);
 
   //              render              //
   return (
